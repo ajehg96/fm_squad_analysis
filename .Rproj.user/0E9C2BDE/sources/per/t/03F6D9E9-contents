@@ -1,0 +1,115 @@
+##### Packages & Functions #####
+
+library(clue)
+library(data.table)
+library(rlist)
+library(plyr)
+library(tidyverse)
+library(XML)
+
+setwd("C:/Users/AJEHG/OneDrive/Documents/R/footballManager")
+
+source("import.R")
+
+##### Import Data #####
+
+training <- fread("data/training.csv", na.strings = c("", "#N/A"))
+
+##### Script #####
+
+### General ###
+
+role_training <- role_attributes[1]
+attributes <- colnames(role_attributes[, 2:ncol(role_attributes)])
+
+for (i in 1:nrow(training)) {
+  
+  training_name <- training$training[i]
+  training_attributes <- na.omit(unlist(training[i, -1]))
+  
+  training_rating <- c()
+  
+  for (j in 1:nrow(role_attributes)) {
+
+    attribute_importance <- role_attributes[j, attributes]
+    attribute_importance[attribute_importance == 0.1] <- 0
+
+    training_rating <- c(training_rating,
+      rowSums(attributes %in% training_attributes * attribute_importance))
+
+  }
+  
+  training_rating <- data.frame(training_rating)
+  colnames(training_rating) <- training_name
+
+  role_training <- bind_cols(role_training, training_rating)
+
+  rm(training_rating)
+  
+}
+
+role_training <- role_training %>%
+  mutate(across(starts_with("gk"), ~ifelse(str_starts(role_code, "gk"), .x, 0)))
+
+### Player ###
+
+player_training <- squad %>%
+  select("name", "age", starts_with("att_")) %>%
+  left_join(bind_rows(best_positions[c(1, 3)], first_team[1:2], second_team[1:2], third_team[1:2]))
+attributes <- colnames(role_attributes[, 2:ncol(role_attributes)])
+
+for (i in 1:nrow(training)) {
+  
+  training_name <- training$training[i]
+  training_attributes <- na.omit(unlist(training[i, -1]))
+  
+  training_rating <- c()
+  
+  for (j in 1:nrow(player_training)) {
+    
+    player_role <- player_training$position[j]
+    
+    training_effectiveness <- role_training[role_training$role_code == player_role, i + 1]
+    training_effectiveness <- ifelse(training_effectiveness > 1, training_effectiveness, 0)
+    
+    if (!(training_effectiveness == 0)) {
+      
+      
+      attribute_importance <- role_attributes[role_attributes$role_code == player_role, attributes]
+      player_attributes <- player_training[j, attributes]
+      
+      training_rating <- c(training_rating,
+                           rowSums(attributes %in% training_attributes *
+                                     attribute_importance *
+                                     player_attributes *
+                                     training_effectiveness))
+      
+    } else {
+      
+      training_rating <- c(training_rating, 0)
+      
+    }
+    
+  }
+  
+  training_rating <- data.frame(training_rating)
+  colnames(training_rating) <- training_name
+  
+  player_training <- bind_cols(player_training, training_rating)
+  
+  rm(training_rating)
+  
+}
+
+rm(training_name, training_effectiveness, training_attributes)
+
+player_training <- player_training %>%
+  select(-starts_with("att_")) %>%
+  mutate(across(starts_with("gk"), ~ifelse(str_starts(position, "gk"), .x, 0)),
+         across(c(4, 6:10, 12:16, 18), ~ifelse(str_starts(position, "gk"), 0, .x))) %>%
+  pivot_longer(cols = 4:ncol(.), names_to = "training", values_to = "score") %>%
+  filter(!(score == 0)) %>%
+  group_by(name) %>%
+  slice_min(order_by = score, n = 1) %>%
+  ungroup() %>%
+  select(1:4)

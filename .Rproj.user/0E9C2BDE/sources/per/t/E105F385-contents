@@ -1,0 +1,382 @@
+##### Packages & Functions #####
+
+library(clue)
+library(data.table)
+library(rlist)
+library(plyr)
+library(tidyverse)
+library(XML)
+
+setwd("C:/Users/AJEHG/OneDrive/Documents/R/footballManager")
+
+##### Import Data #####
+
+### Tactical Roles ###
+
+tactic_roles <- data.frame(position = c("gk_sk_d_c",
+                                        "cd_bpd_d_c",
+                                        "wb_wb_a_r",
+                                        "dm_sv_a_c",
+                                        "wb_wb_a_l",
+                                        "w_if_a_ri",
+                                        "w_if_a_li",
+                                        "s_af_a_c"),
+                           number = c(1, 3, 1, 2, 1, 1, 1, 1))
+
+### Role Attributes ###
+
+role_attributes <- fread("data/role_attributes.csv", na.strings=c("", "#NA")) %>%
+  type.convert(as.is = TRUE) %>%
+  rowwise() %>%
+  mutate(role_code = paste0(sapply(str_split(position, "_"), function(x) paste(substr(x, 1, 1), collapse = "")), "_",
+                            sapply(str_split(role, "_"), function(x) paste(substr(x, 1, 1), collapse = "")), "_",
+                            sapply(str_split(mentality, "_"), function(x) paste(substr(x, 1, 1), collapse = "")), "_",
+                            sapply(str_split(side, "_"), function(x) paste(substr(x, 1, 1), collapse = "")))) %>%
+  select(5:ncol(.)) %>%
+  filter(role_code %in% tactic_roles$position)
+
+# role_attributes[role_attributes == 0.1] <- 0
+
+### Squad Attributes ###
+
+squad <- htmlParse("data/search.html", encoding = "UTF-8")
+squad <- readHTMLTable(squad) %>%
+  as.data.frame() %>%
+  filter(!if_any(8:50, ~ str_detect(.x, "-"))) %>%
+  select("name" = "NULL.Name", "age" = "NULL.Age", "height" = "NULL.Height", "position" = "NULL.Position",
+         "foot_right" = "NULL.Right.Foot", "foot_left" = "NULL.Left.Foot", "att_cor" = "NULL.Cor",
+         "att_cro" = "NULL.Cro", "att_dri" = "NULL.Dri", "att_fin" = "NULL.Fin", "att_fir" = "NULL.Fir",
+         "att_fre" = "NULL.Fre", "att_hea" = "NULL.Hea", "att_lon" = "NULL.Lon", "att_lth" = "NULL.L.Th",
+         "att_mar" = "NULL.Mar", "att_pas" = "NULL.Pas", "att_pen" = "NULL.Pen", "att_tck" = "NULL.Tck",
+         "att_tec" = "NULL.Tec", "att_agg" = "NULL.Agg", "att_ant" = "NULL.Ant", "att_bra" = "NULL.Bra",
+         "att_cmp" = "NULL.Cmp", "att_cnt" = "NULL.Cnt", "att_dec" = "NULL.Dec", "att_det" = "NULL.Det",
+         "att_fla" = "NULL.Fla", "att_ldr" = "NULL.Ldr", "att_otb" = "NULL.OtB", "att_pos" = "NULL.Pos",
+         "att_tea" = "NULL.Tea", "att_vis" = "NULL.Vis", "att_wor" = "NULL.Wor", "att_acc" = "NULL.Acc",
+         "att_agi" = "NULL.Agi", "att_bal" = "NULL.Bal", "att_jum" = "NULL.Jum", "att_nat" = "NULL.Nat",
+         "att_pac" = "NULL.Pac", "att_sta" = "NULL.Sta", "att_str" = "NULL.Str", "att_aer" = "NULL.Aer",
+         "att_cmd" = "NULL.Cmd", "att_com" = "NULL.Com", "att_ecc" = "NULL.Ecc", "att_han" = "NULL.Han",
+         "att_kic" = "NULL.Kic", "att_1v1" = "NULL.1v1", "att_pun" = "NULL.Pun", "att_ref" = "NULL.Ref",
+         "att_tro" = "NULL.TRO", "att_thr" = "NULL.Thr") %>%
+  mutate(height = str_remove(height, " cm")) %>%
+  mutate(position = sub("([A-Z])([(])", "\\1 \\2", sub("([A-Z])([(])", "\\1 \\2", sub("([A-Z])([(])", "\\1 \\2", str_replace_all(str_replace_all(str_replace_all(position, "/", ","), " ", ""), ",", " "))))) %>%
+  mutate(goal_keeper = str_detect(position, "GK"),
+         full_back = str_detect(position, "(^D\\s|\\sD\\s)([\\w*\\s*])*(\\(\\w*[RL]\\w*\\)?)"),
+         central_defender = str_detect(position, "(^D\\s|\\sD\\s)([\\w*\\s*])*(\\(\\w*[C]\\w*\\)?)"),
+         wing_back = str_detect(position, "WB"),
+         defensive_midfielder = str_detect(position, "DM"),
+         wide_midfielder = str_detect(position, "(^M\\s|\\sM\\s)([\\w*\\s*])*(\\(\\w*[RL]\\w*\\)?)"),
+         central_midfielder = str_detect(position, "(^M\\s|\\sM\\s)([\\w*\\s*])*(\\(\\w*[C]\\w*\\)?)"),
+         winger = str_detect(position, "(^AM\\s|\\sAM\\s)([\\w*\\s*])*(\\(\\w*[RL]\\w*\\)?)"),
+         attacking_midfielder = str_detect(position, "(^AM\\s|\\sAM\\s)([\\w*\\s*])*(\\(\\w*[C]\\w*\\)?)"),
+         striker = str_detect(position, "ST")) %>%
+  mutate(foot_right = mapvalues(foot_right, from = c("Very Weak", "Weak", "Reasonable", "Fairly Strong", "Strong", "Very Strong"),
+                                to = c(1, 2, 3, 4, 5, 6)),
+         foot_left = mapvalues(foot_left, from = c("Very Weak", "Weak", "Reasonable", "Fairly Strong", "Strong", "Very Strong"),
+                               to = c(1, 2, 3, 4, 5, 6))) %>%
+  select("name", "age", "height", "goal_keeper", "central_defender", "full_back",
+         "defensive_midfielder", "wing_back", "central_midfielder", "wide_midfielder",
+         "attacking_midfielder", "winger", "striker", "foot_right", "foot_left",
+         "att_cor", "att_cro", "att_dri", "att_fin", "att_fir", "att_fre", "att_hea", "att_lon",
+         "att_lth", "att_mar", "att_pas", "att_pen", "att_tck", "att_tec", "att_agg", "att_ant",
+         "att_bra", "att_cmp", "att_cnt", "att_dec", "att_det", "att_fla", "att_ldr", "att_otb",
+         "att_pos", "att_tea", "att_vis", "att_wor", "att_acc", "att_agi", "att_bal", "att_jum",
+         "att_nat", "att_pac", "att_sta", "att_str", "att_aer", "att_cmd", "att_com", "att_ecc",
+         "att_han", "att_kic", "att_1v1", "att_pun", "att_ref", "att_tro", "att_thr") %>%
+  type.convert(as.is = TRUE)
+
+##### Generate Role Ratings #####
+
+### First Team ###
+
+roles_first <- matrix(nrow = nrow(squad), ncol = nrow(role_attributes) + 2) %>%
+  as.data.frame()
+roles_first[, 1] <- squad$name
+roles_first[, 2] <- squad$age
+
+df <- c(role_attributes$role_code)
+df <- c("name", "age", df)
+colnames(roles_first) <- df
+
+for (i in 1:nrow(squad)) {
+  
+  m <- as.numeric(squad[i, 16:62])
+  
+  for (j in 1:nrow(role_attributes)) {
+    
+    n <- as.numeric(role_attributes[j, 2:ncol(role_attributes)])
+    
+    x <- data.frame(m, n)
+    x$prod <- x$m * x$n
+    
+    roles_first[i, (j + 2)] <- sum(x$prod) / sum(x$n)
+    
+    if (str_starts(colnames(roles_first[(j + 2)]), "gk_") &
+        squad[i, 4] == FALSE) {
+      
+      roles_first[i, (j + 2)] <- roles_first[i, (j + 2)] * 0.2
+      
+    }
+    
+    if (str_starts(colnames(roles_first[(j + 2)]), "cd_") &
+        squad[i, 5] == FALSE) {
+      
+      roles_first[i, (j + 2)] <- roles_first[i, (j + 2)] * 0.2
+      
+    }
+    
+    if (str_starts(colnames(roles_first[(j + 2)]), "fb_") &
+        squad[i, 6] == FALSE) {
+      
+      roles_first[i, (j + 2)] <- roles_first[i, (j + 2)] * 0.2
+      
+    }
+    
+    if (str_starts(colnames(roles_first[(j + 2)]), "dm_") &
+        squad[i, 7] == FALSE) {
+      
+      roles_first[i, (j + 2)] <- roles_first[i, (j + 2)] * 0.2
+      
+    }
+    
+    if (str_starts(colnames(roles_first[(j + 2)]), "wb_") &
+        squad[i, 8] == FALSE) {
+      
+      roles_first[i, (j + 2)] <- roles_first[i, (j + 2)] * 0.2
+      
+    }
+    
+    if (str_starts(colnames(roles_first[(j + 2)]), "cm_") &
+        squad[i, 9] == FALSE) {
+      
+      roles_first[i, (j + 2)] <- roles_first[i, (j + 2)] * 0.2
+      
+    }
+    
+    if (str_starts(colnames(roles_first[(j + 2)]), "wm_") &
+        squad[i, 10] == FALSE) {
+      
+      roles_first[i, (j + 2)] <- roles_first[i, (j + 2)] * 0.2
+      
+    }
+    
+    if (str_starts(colnames(roles_first[(j + 2)]), "am_") &
+        squad[i, 11] == FALSE) {
+      
+      roles_first[i, (j + 2)] <- roles_first[i, (j + 2)] * 0.2
+      
+    }
+    
+    if (str_starts(colnames(roles_first[(j + 2)]), "w_") &
+        squad[i, 12] == FALSE) {
+      
+      roles_first[i, (j + 2)] <- roles_first[i, (j + 2)] * 0.2
+      
+    }
+    
+    if (str_starts(colnames(roles_first[(j + 2)]), "s_") &
+        squad[i, 13] == FALSE) {
+      
+      roles_first[i, (j + 2)] <- roles_first[i, (j + 2)] * 0.2
+      
+    }
+    
+    if ((str_ends(colnames(roles_first[(j + 2)]), "r") |
+         str_ends(colnames(roles_first[(j + 2)]), "li")) &
+        squad[i, 14] %in% c(0, 1, 2, 3, 4)) {
+      
+      roles_first[i, (j + 2)] <- 0
+      
+    }
+    
+    if ((str_ends(colnames(roles_first[(j + 2)]), "l") |
+         str_ends(colnames(roles_first[(j + 2)]), "ri")) &
+        squad[i, 15] %in% c(0, 1, 2, 3, 4)) {
+      
+      roles_first[i, (j + 2)] <- 0
+      
+    }
+    
+  }
+  
+}
+
+roles_search <- roles_first %>%
+  arrange(name)
+
+# ### Free Roles ###
+# 
+# roles <- matrix(nrow = nrow(search), ncol = nrow(role_attributes) + 2) %>%
+#   as.data.frame()
+# roles[, 1] <- search$name
+# roles[, 2] <- search$age
+# 
+# df <- c(paste(role_attributes$position, role_attributes$role, role_attributes$mentality, role_attributes$side, sep = "-"))
+# df <- c("name", "age", df)
+# colnames(roles) <- df
+# 
+# for (i in 1:nrow(search)) {
+#   
+#   m <- as.numeric(search[i, 16:62])
+#   
+#   for (j in 1:(nrow(role_attributes))) {
+#     
+#     n <- as.numeric(role_attributes[j, 5:51])
+#     
+#     x <- data.frame(m, n)
+#     x$prod <- x$m * x$n
+#     
+#     roles[i, (j + 2)] <- sum(x$prod) / sum(x$n)
+#     
+#     if (roles$age[i] > 21) {
+#       
+#       if (str_extract(colnames(roles[(j + 1)]), "^[^-]*") == "goal_keeper" &
+#           search[i, 4] == FALSE) {
+#         
+#         roles[i, (j + 1)] <- roles[i, (j + 1)] * 0.2
+#         
+#       }
+#       
+#       if (str_extract(colnames(roles[(j + 1)]), "^[^-]*") == "central_defender" &
+#           search[i, 5] == FALSE) {
+#         
+#         roles[i, (j + 1)] <- roles[i, (j + 1)] * 0.2
+#         
+#       }
+#       
+#       if (str_extract(colnames(roles[(j + 1)]), "^[^-]*") == "full_back" &
+#           search[i, 6] == FALSE) {
+#         
+#         roles[i, (j + 1)] <- roles[i, (j + 1)] * 0.2
+#         
+#       }
+#       
+#       if (str_extract(colnames(roles[(j + 1)]), "^[^-]*") == "defensive_midfielder" &
+#           search[i, 7] == FALSE) {
+#         
+#         roles[i, (j + 1)] <- roles[i, (j + 1)] * 0.2
+#         
+#       }
+#       
+#       if (str_extract(colnames(roles[(j + 1)]), "^[^-]*") == "wing_back" &
+#           search[i, 8] == FALSE) {
+#         
+#         roles[i, (j + 1)] <- roles[i, (j + 1)] * 0.2
+#         
+#       }
+#       
+#       if (str_extract(colnames(roles[(j + 1)]), "^[^-]*") == "central_midfielder" &
+#           search[i, 9] == FALSE) {
+#         
+#         roles[i, (j + 1)] <- roles[i, (j + 1)] * 0.2
+#         
+#       }
+#       
+#       if (str_extract(colnames(roles[(j + 1)]), "^[^-]*") == "wide_midfielder" &
+#           search[i, 10] == FALSE) {
+#         
+#         roles[i, (j + 1)] <- roles[i, (j + 1)] * 0.2
+#         
+#       }
+#       
+#       if (str_extract(colnames(roles[(j + 1)]), "^[^-]*") == "attacking_midfielder" &
+#           search[i, 11] == FALSE) {
+#         
+#         roles[i, (j + 1)] <- roles[i, (j + 1)] * 0.2
+#         
+#       }
+#       
+#       if (str_extract(colnames(roles[(j + 1)]), "^[^-]*") == "winger" &
+#           search[i, 12] == FALSE) {
+#         
+#         roles[i, (j + 1)] <- roles[i, (j + 1)] * 0.2
+#         
+#       }
+#       
+#       if (str_extract(colnames(roles[(j + 1)]), "^[^-]*") == "striker" &
+#           search[i, 13] == FALSE) {
+#         
+#         roles[i, (j + 1)] <- roles[i, (j + 1)] * 0.2
+#         
+#       }
+#       
+#     }
+#     
+#     if ((str_extract(colnames(roles[(j + 1)]), "[^-]+$") == "right" |
+#          str_extract(colnames(roles[(j + 1)]), "[^-]+$") == "left_inverted") &
+#         search[i, 14] %in% c(0, 1, 2, 3, 4)) {
+#       
+#       roles[i, (j + 1)] <- 0
+#       
+#     }
+#     
+#     if ((str_extract(colnames(roles[(j + 1)]), "[^-]+$") == "left" |
+#          str_extract(colnames(roles[(j + 1)]), "[^-]+$") == "right_inverted") &
+#         search[i, 15] %in% c(0, 1, 2, 3, 4)) {
+#       
+#       roles[i, (j + 1)] <- 0
+#       
+#     }
+#       
+#     }
+#     
+#   }
+# 
+# roles_free <- roles
+# 
+# ### ChatGPT 4o ###
+# 
+# # Create a function to calculate the role scores
+# # 
+# # calculate_role_scores <- function(search, role_attributes) {
+# #   search <- search %>%
+# #     rowwise() %>%
+# #     mutate(
+# #       roles = list(
+# #         sapply(1:nrow(role_attributes), function(j) {
+# #           m <- as.numeric(across(att_cor:att_thr))
+# #           n <- as.numeric(role_attributes[j, 5:51])
+# #           score <- sum(m * n) / sum(n)
+# #           
+# #           position <- str_extract(colnames(role_attributes)[j + 1], "^[^-]*")
+# #           foot <- str_extract(colnames(role_attributes)[j + 1], "[^-]+$")
+# #           
+# #           if (position == "goal_keeper" && !goal_keeper) score <- score * 0.2
+# #           if (position == "central_defender" && !central_defender) score <- score * 0.2
+# #           if (position == "full_back" && !full_back) score <- score * 0.2
+# #           if (position == "defensive_midfielder" && !defensive_midfielder) score <- score * 0.2
+# #           if (position == "wing_back" && !wing_back) score <- score * 0.2
+# #           if (position == "central_midfielder" && !central_midfielder) score <- score * 0.2
+# #           if (position == "wide_midfielder" && !wide_midfielder) score <- score * 0.2
+# #           if (position == "attacking_midfielder" && !attacking_midfielder) score <- score * 0.2
+# #           if (position == "winger" && !winger) score <- score * 0.2
+# #           if (position == "striker" && !striker) score <- score * 0.2
+# #           
+# #           if ((foot == "right" || foot == "left_inverted") && foot_right %in% c(0, 1, 2, 3, 4)) score <- 0
+# #           if ((foot == "left" || foot == "right_inverted") && foot_left %in% c(0, 1, 2, 3, 4)) score <- 0
+# #           
+# #           return(score)
+# #         })
+# #       )
+# #     ) %>%
+# #     unnest_wider(roles) %>%
+# #     select(-roles)
+# #   
+# #   colnames(search)[16:(15 + nrow(role_attributes))] <- paste(role_attributes$position, role_attributes$role, role_attributes$mentality, role_attributes$side, sep = "-")
+# #   
+# #   return(search)
+# # }
+# # 
+# # # Applying the function to calculate role scores
+# # roles_position <- search %>%
+# #   calculate_role_scores(role_attributes) %>%
+# #   arrange(name)
+# # 
+# # # For roles_free (without positional constraints)
+# # roles_free <- search %>%
+# #   calculate_role_scores(role_attributes) %>%
+# #   select(name, age, everything()) %>%
+# #   arrange(name)
+# # 
+# # # View the results
+# # head(roles_position)
+# # head(roles_free)
