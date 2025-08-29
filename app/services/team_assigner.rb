@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 # app/services/team_assigner.rb
 
 require "munkres"
 require "set"
 
 class TeamAssigner
-  PLAYER_INFO_KEYS = %w[name age potential].freeze
+  PLAYER_INFO_KEYS = ["name", "age", "potential"].freeze
 
   def assign_first_team(role_ratings, tactic_roles)
     assign_team(role_ratings.dup, tactic_roles)
@@ -30,6 +32,7 @@ class TeamAssigner
 
       player.each do |key, value|
         next if PLAYER_INFO_KEYS.include?(key)
+
         modified_player[key] = value * modifier
       end
       modified_player
@@ -55,14 +58,13 @@ class TeamAssigner
     end
   end
 
-
   private
 
   def assign_team(players, tactic_roles)
     return [] if players.empty?
 
     role_codes = tactic_roles.flat_map do |tr|
-      [ tr["position"] ] * tr["number"]
+      [tr["position"]] * tr["number"]
     end
 
     cost_matrix = players.map do |player_ratings|

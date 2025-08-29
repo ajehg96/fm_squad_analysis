@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
@@ -21,7 +23,7 @@ gem "jbuilder"
 # gem "bcrypt", "~> 3.1.7"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
-gem "tzinfo-data", platforms: %i[ windows jruby ]
+gem "tzinfo-data", platforms: [:windows, :jruby]
 
 # Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
 gem "solid_cache"
@@ -42,7 +44,7 @@ gem "thruster", require: false
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
-  gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
+  gem "debug", platforms: [:mri, :windows], require: "debug/prelude"
 
   # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
   gem "brakeman", require: false
@@ -62,10 +64,21 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "rspec-rails", "~> 8.0", groups: [ :development, :test ]
+gem "rspec-rails", "~> 8.0", groups: [:development, :test]
 
 gem "csv", "~> 3.3"
 
 gem "nokogiri", "~> 1.18"
 
 gem "munkres", "~> 0.1.0"
+
+gem "pg", "~> 1.6"
+
+gem "rubocop-performance"
+gem "rubocop-rake"
+gem "rubocop-rails"
+gem "rubocop-rspec"
+gem "rubocop-rspec_rails"
+gem "rubocop-capybara"
+gem "rubocop-factory_bot"
+gem "rubocop-shopify"

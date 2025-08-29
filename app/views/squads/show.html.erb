@@ -1,0 +1,93 @@
+<h1>Squad Analysis</h1>
+
+<div style="display: flex; gap: 40px;">
+  
+  <div>
+    <h2>First Team</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Position</th>
+          <th>Name</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @first_team.sort_by { |p| p[:position] }.each do |player| %>
+          <tr>
+            <td><%= player[:position].sub(/_\d+$/, '') %></td>
+            <td><%= player[:name] %></td>
+            <td><%= player[:score].round(2) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div>
+    <h2>Second Team</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Position</th>
+          <th>Name</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @second_team.sort_by { |p| p[:position] }.each do |player| %>
+          <tr>
+            <td><%= player[:position].sub(/_\d+$/, '') %></td>
+            <td><%= player[:name] %></td>
+            <td><%= player[:score].round(2) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div>
+    <h2>Third Team</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Position</th>
+          <th>Name</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @third_team.sort_by { |p| p[:position] }.each do |player| %>
+          <tr>
+            <td><%= player[:position].sub(/_\d+$/, '') %></td>
+            <td><%= player[:name] %></td>
+            <td><%= player[:score].round(2) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<hr>
+
+<h2>Rest of Squad (Best Positions)</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Best Position</th>
+      <th>Score</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @remainder.sort_by { |p| -p[:score] }.each do |player| %>
+      <tr>
+        <td><%= player[:name] %></td>
+        <td><%= player[:position] %></td>
+        <td><%= player[:score].round(2) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
