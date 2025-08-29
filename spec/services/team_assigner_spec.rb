@@ -20,7 +20,10 @@ RSpec.describe 'TeamAssigner' do
       { "name" => "Player B (CD)", "age" => 23, "potential" => 155, "central_defender" => true, "att_cor" => 7, "att_cro" => 12 },
       # Youth Players for Third Team
       { "name" => "Youth A (GK)", "age" => 18, "potential" => 180, "goal_keeper" => true, "att_cor" => 8, "att_cro" => 5 },
-      { "name" => "Youth B (CD)", "age" => 19, "potential" => 130, "central_defender" => true, "att_cor" => 6, "att_cro" => 10 }
+      { "name" => "Youth B (CD)", "age" => 19, "potential" => 130, "central_defender" => true, "att_cor" => 6, "att_cro" => 10 },
+      # Leftover Players
+      { "name" => "Leftover A (GK)", "age" => 29, "potential" => 110, "goal_keeper" => true, "att_cor" => 1, "att_cro" => 1 },
+      { "name" => "Leftover B (CD)", "age" => 20, "potential" => 115, "central_defender" => true, "att_cor" => 1, "att_cro" => 2 }
     ]
   end
 

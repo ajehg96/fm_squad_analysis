@@ -115,7 +115,6 @@ GEM
       raabro (~> 1.4)
     globalid (1.2.1)
       activesupport (>= 6.1)
-    hungarian_algorithm (1.0.0)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
     importmap-rails (2.2.2)
@@ -159,6 +158,7 @@ GEM
     mini_portile2 (2.8.9)
     minitest (5.25.5)
     msgpack (1.8.0)
+    munkres (0.1.0)
     net-imap (0.5.9)
       date
       net-protocol
@@ -380,10 +380,10 @@ DEPENDENCIES
   capybara
   csv (~> 3.3)
   debug
-  hungarian_algorithm (~> 1.0)
   importmap-rails
   jbuilder
   kamal
+  munkres (~> 0.1.0)
   nokogiri (~> 1.18)
   propshaft
   puma (>= 5.0)

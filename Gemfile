@@ -68,4 +68,4 @@ gem "csv", "~> 3.3"
 
 gem "nokogiri", "~> 1.18"
 
-gem "hungarian_algorithm", "~> 1.0"
+gem "munkres", "~> 0.1.0"

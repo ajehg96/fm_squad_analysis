@@ -1,8 +1,9 @@
-require "hungarian_algorithm"
+# app/services/team_assigner.rb
+
+require "munkres"
 require "set"
 
 class TeamAssigner
-  # This version includes up to the Third Team assignment
   PLAYER_INFO_KEYS = %w[name age potential].freeze
 
   def assign_first_team(role_ratings, tactic_roles)
@@ -36,6 +37,24 @@ class TeamAssigner
 
     assign_team(modified_youth_ratings, tactic_roles)
   end
+
+  def assign_best_roles_for_remainder(role_ratings, first_team, second_team, third_team)
+    picked_names = (
+      first_team.map { |p| p[:name] } +
+      second_team.map { |p| p[:name] } +
+      third_team.map { |p| p[:name] }
+    ).to_set
+
+    remaining_players = role_ratings.reject { |player| picked_names.include?(player["name"]) }
+
+    remaining_players.map do |player|
+      scores_only = player.reject { |key, _| PLAYER_INFO_KEYS.include?(key) }
+      best_role, best_score = scores_only.max_by { |_, score| score }
+
+      { name: player["name"], position: best_role, score: best_score }
+    end
+  end
+
 
   private
 
@@ -71,7 +90,10 @@ class TeamAssigner
       end
     end
 
-    assignments = HungarianAlgorithm.new(normalized_matrix).process
+    # --- THIS IS THE CORRECTED LINE, BASED ON THE SOURCE CODE ---
+    munkres = Munkres.new(normalized_matrix)
+    assignments = munkres.find_pairings
+    # -----------------------------------------------------------
 
     team = []
     assignments.each do |row_idx, col_idx|

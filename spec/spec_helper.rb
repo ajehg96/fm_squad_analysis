@@ -70,23 +70,23 @@ RSpec.configure do |config|
   # Kernel.srand config.seed
 end
 
-require 'stringio'
-require 'hungarian_algorithm'
+# require 'stringio'
+# require 'hungarian_algorithm'
 
-class HungarianAlgorithm
-  # Grab the original 'process' method before we overwrite it
-  original_process_method = instance_method(:process)
+# class HungarianAlgorithm
+#   # Grab the original 'process' method before we overwrite it
+#   original_process_method = instance_method(:process)
 
-  # Now, redefine the 'process' method
-  define_method(:process) do
-    original_stdout = $stdout
-    $stdout = StringIO.new # Redirect output
-    begin
-      # Bind the original method to the current instance (`self`) and call it
-      original_process_method.bind(self).call
-    ensure
-      # ALWAYS restore the original output stream
-      $stdout = original_stdout
-    end
-  end
-end
+#   # Now, redefine the 'process' method
+#   define_method(:process) do
+#     original_stdout = $stdout
+#     $stdout = StringIO.new # Redirect output
+#     begin
+#       # Bind the original method to the current instance (`self`) and call it
+#       original_process_method.bind(self).call
+#     ensure
+#       # ALWAYS restore the original output stream
+#       $stdout = original_stdout
+#     end
+#   end
+# end
