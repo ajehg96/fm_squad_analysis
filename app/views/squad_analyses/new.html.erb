@@ -1,0 +1,22 @@
+<h1>Squad Analysis</h1>
+
+<p>Select the in-game date and upload your squad.html file to begin.</p>
+
+<hr>
+
+<%# This form will submit the file to the 'create' action %>
+<%= form_with url: squad_analyses_path, data: { turbo: false } do |form| %>
+  <div style="margin-bottom: 1rem;">
+    <%= form.label :snapshot_date, "Select In-Game Date:" %><br>
+    <%= form.date_field :snapshot_date, value: Date.today %>
+  </div>
+
+  <div style="margin-bottom: 1rem;">
+    <%= form.label :squad_file, "Upload your squad.html file:" %><br>
+    <%= form.file_field :squad_file %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit "Upload and Analyze Squad" %>
+  </div>
+<% end %>
