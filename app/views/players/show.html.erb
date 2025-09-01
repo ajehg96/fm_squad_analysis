@@ -1,0 +1,26 @@
+<h1><%= @progression.player.name %></h1>
+<p><strong>Joined:</strong> <%= @progression.joined_date %></p>
+
+<hr>
+
+<h2>Current Attributes</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Current</th>
+      <th>Change (Prev)</th>
+      <th>Change (First)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @progression.attribute_changes.each do |attr_name, changes| %>
+      <tr>
+        <td><%= attr_name.to_s.humanize %></td>
+        <td><%= changes[:current_value] %></td>
+        <td><%= changes[:change_since_previous] %></td>
+        <td><%= changes[:change_since_first] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

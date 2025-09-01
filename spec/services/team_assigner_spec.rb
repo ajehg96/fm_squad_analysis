@@ -4,17 +4,21 @@ require_relative "../spec_helper"
 require_relative "../../app/services/data_importer"
 require_relative "../../app/services/team_assigner"
 
-# rubocop:disable RSpec/MultipleMemoizedHelpers
 RSpec.describe(TeamAssigner) do
-  let(:importer) { DataImporter.new }
   let(:assigner) { described_class.new }
-  let(:role_attributes) do
+
+  def importer
+    DataImporter.new
+  end
+
+  def role_attributes
     [
       { "role_code" => "gkskdc_sk_d_c", "att_cor" => 10, "att_cro" => 20 },
       { "role_code" => "cdbpdc_bpd_d_c", "att_cor" => 5, "att_cro" => 10, "att_tck" => 5 },
     ]
   end
-  let(:squad_data) do
+
+  def squad_data
     [
       { "name" => "Player A (GK)", "age" => 25, "potential" => 150, "goal_keeper" => true, "att_cor" => 18, "att_cro" => 10 },
       { "name" => "Player D (CD)", "age" => 28, "potential" => 160, "central_defender" => true, "att_cor" => 8, "att_cro" => 15 },
@@ -26,13 +30,17 @@ RSpec.describe(TeamAssigner) do
       { "name" => "Leftover B (CD)", "age" => 20, "potential" => 115, "central_defender" => true, "att_cor" => 1, "att_cro" => 2, "att_tck" => 10 },
     ]
   end
-  let(:tactic_roles) do
+
+  def tactic_roles
     [
       { "position" => "gkskdc_sk_d_c", "number" => 1 },
       { "position" => "cdbpdc_bpd_d_c", "number" => 1 },
     ]
   end
-  let(:role_ratings) { importer.calculate_role_ratings(squad_data, role_attributes) }
+
+  def role_ratings
+    importer.calculate_role_ratings(squad_data, role_attributes)
+  end
 
   describe "#assign_first_team" do
     let(:first_team) { assigner.assign_first_team(role_ratings, tactic_roles) }
@@ -113,4 +121,3 @@ RSpec.describe(TeamAssigner) do
     end
   end
 end
-# rubocop:enable RSpec/MultipleMemoizedHelpers

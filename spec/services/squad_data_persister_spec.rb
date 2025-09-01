@@ -23,10 +23,7 @@ RSpec.describe(SquadDataPersister) do
       it "correctly saves the attributes and date" do
         service.persist(processed_squad_data: player_data, snapshot_date: snapshot_date)
         snapshot = Player.find_by(name: "Test Player 1").player_snapshots.first
-
-        expect(snapshot.snapshot_date).to(eq(snapshot_date))
-        expect(snapshot.att_fin).to(eq(15))
-        expect(snapshot.att_tck).to(eq(5))
+        expect(snapshot).to(have_attributes(snapshot_date: snapshot_date, att_fin: 15, att_tck: 5))
       end
     end
 

@@ -17,11 +17,18 @@
           </tr>
         </thead>
         <tbody>
-          <% @first_team.sort_by { |p| p[:position] }.each do |player| %>
+          <% @first_team.sort_by { |p| p[:position] }.each do |player_hash| %>
             <tr>
-              <td><%= player[:position].to_s.sub(/_\d+$/, '') %></td>
-              <td><%= player[:name] %></td>
-              <td><%= player[:score].round(2) %></td>
+              <td><%= player_hash[:position].to_s.sub(/_\d+$/, '') %></td>
+              <td>
+                <% player = @players_by_name[player_hash[:name]] %>
+                <% if player %>
+                  <%= link_to player.name, player_path(player) %>
+                <% else %>
+                  <%= player_hash[:name] %>
+                <% end %>
+              </td>
+              <td><%= player_hash[:score].round(2) %></td>
             </tr>
           <% end %>
         </tbody>
@@ -39,11 +46,18 @@
           </tr>
         </thead>
         <tbody>
-          <% @second_team.sort_by { |p| p[:position] }.each do |player| %>
+          <% @second_team.sort_by { |p| p[:position] }.each do |player_hash| %>
             <tr>
-              <td><%= player[:position].to_s.sub(/_\d+$/, '') %></td>
-              <td><%= player[:name] %></td>
-              <td><%= player[:score].round(2) %></td>
+              <td><%= player_hash[:position].to_s.sub(/_\d+$/, '') %></td>
+              <td>
+                <% player = @players_by_name[player_hash[:name]] %>
+                <% if player %>
+                  <%= link_to player.name, player_path(player) %>
+                <% else %>
+                  <%= player_hash[:name] %>
+                <% end %>
+              </td>
+              <td><%= player_hash[:score].round(2) %></td>
             </tr>
           <% end %>
         </tbody>
@@ -61,11 +75,18 @@
           </tr>
         </thead>
         <tbody>
-          <% @third_team.sort_by { |p| p[:position] }.each do |player| %>
+          <% @third_team.sort_by { |p| p[:position] }.each do |player_hash| %>
             <tr>
-              <td><%= player[:position].to_s.sub(/_\d+$/, '') %></td>
-              <td><%= player[:name] %></td>
-              <td><%= player[:score].round(2) %></td>
+              <td><%= player_hash[:position].to_s.sub(/_\d+$/, '') %></td>
+              <td>
+                <% player = @players_by_name[player_hash[:name]] %>
+                <% if player %>
+                  <%= link_to player.name, player_path(player) %>
+                <% else %>
+                  <%= player_hash[:name] %>
+                <% end %>
+              </td>
+              <td><%= player_hash[:score].round(2) %></td>
             </tr>
           <% end %>
         </tbody>
@@ -86,11 +107,18 @@
     </thead>
     <tbody>
       <%# Sort by score in descending order (highest first) %>
-      <% @remainder.sort_by { |p| -p[:score] }.each do |player| %>
+      <% @remainder.sort_by { |p| -p[:score] }.each do |player_hash| %>
         <tr>
-          <td><%= player[:name] %></td>
-          <td><%= player[:position] %></td>
-          <td><%= player[:score].round(2) %></td>
+          <td><%= player_hash[:position].to_s.sub(/_\d+$/, '') %></td>
+          <td>
+            <% player = @players_by_name[player_hash[:name]] %>
+            <% if player %>
+              <%= link_to player.name, player_path(player) %>
+            <% else %>
+              <%= player_hash[:name] %>
+            <% end %>
+          </td>
+          <td><%= player_hash[:score].round(2) %></td>
         </tr>
       <% end %>
     </tbody>

@@ -17,6 +17,7 @@ AllCops:
     - spec/fixtures/*
     - spec/rails_helper.rb
     - spec/spec_helper.rb
+    - db/migrate/**/*
 
 
 Layout/LineLength:

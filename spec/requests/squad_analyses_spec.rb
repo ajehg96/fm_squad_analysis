@@ -76,8 +76,7 @@ RSpec.describe("SquadAnalyses", type: :request) do
 
     it "renders the results in the response body" do
       get squad_analysis_url(:latest)
-      expect(response.body).to(include("Test Player"))
-      expect(response.body).to(include("GK"))
+      expect(response.body).to(include("Test Player").and(include("GK")))
     end
   end
 end
