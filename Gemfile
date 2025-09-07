@@ -82,3 +82,9 @@ gem "rubocop-rspec_rails"
 gem "rubocop-capybara"
 gem "rubocop-factory_bot"
 gem "rubocop-shopify"
+
+gem "rails_best_practices", "~> 1.23"
+
+gem "activerecord-import", "~> 2.2"
+
+gem "simplecov", "~> 0.22.0"

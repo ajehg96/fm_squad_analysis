@@ -2,12 +2,20 @@
 
 require "rails_helper"
 
-RSpec.describe("Players", type: "request") do
+RSpec.describe("Players", type: :request) do
   describe "GET /show" do
-    let!(:player) { Player.create!(name: "Test Player") }
-
-    before do
-      player.player_snapshots.create!(snapshot_date: Time.zone.today)
+    # FIXED: We need to create a player that has a complete snapshot,
+    # otherwise the ratings calculation in the view will fail.
+    let!(:player) do
+      Player.create!(name: "Test Player").tap do |p|
+        p.player_snapshots.create!(
+          DataImporter::PLAYER_ATTRIBUTES.index_with { 10 }.merge(
+            snapshot_date: Time.zone.today,
+            foot_right: 6,
+            foot_left: 6,
+          ),
+        )
+      end
     end
 
     it "returns http success" do

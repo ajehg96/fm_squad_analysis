@@ -1,0 +1,12 @@
+<h1>Upload Scouted Players File</h1>
+
+<%= form_with url: scouted_players_path, method: :post, multipart: true do |form| %>
+  <div>
+    <%= form.label :scouted_file, "Select HTML file" %>
+    <%= form.file_field :scouted_file %>
+  </div>
+
+  <div>
+    <%= form.submit "Upload" %>
+  </div>
+<% end %>

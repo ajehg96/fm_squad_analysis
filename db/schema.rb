@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_30_064054) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_07_093022) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -79,7 +79,27 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_30_064054) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "scouted", default: false
+    t.index ["name"], name: "index_players_on_name", unique: true
+    t.index ["scouted"], name: "index_players_on_scouted"
+  end
+
+  create_table "tactic_roles", force: :cascade do |t|
+    t.bigint "tactic_id", null: false
+    t.integer "position"
+    t.string "role"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tactic_id"], name: "index_tactic_roles_on_tactic_id"
+  end
+
+  create_table "tactics", force: :cascade do |t|
+    t.string "name"
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   add_foreign_key "player_snapshots", "players"
+  add_foreign_key "tactic_roles", "tactics"
 end

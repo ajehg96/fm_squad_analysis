@@ -1,129 +1,270 @@
+<style>
+  /* Tab styles */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #ccc;
+  }
+  .tab-link {
+    padding: 10px 15px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    border-radius: 5px 5px 0 0;
+    margin-right: 5px;
+  }
+  .tab-link.active {
+    background-color: #eee;
+  }
+  .tab-content {
+    display: none;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-top: none;
+  }
+  .tab-content.active {
+    display: block;
+  }
+
+  /* Layout for pitch and list */
+  .team-layout {
+    display: flex;
+    gap: 20px;
+  }
+
+  /* Pitch styles */
+  .pitch {
+    position: relative;
+    width: 600px;
+    height: 800px;
+    background-color: #53a053; /* Green grass */
+    border: 2px solid white;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><line x1="300" y1="0" x2="300" y2="800" style="stroke:white;stroke-width:1;stroke-dasharray:5,5;" /><circle cx="300" cy="400" r="50" style="stroke:white;stroke-width:1;fill:none;" /><rect x="100" y="0" width="400" height="100" style="stroke:white;stroke-width:1;fill:none;" /><rect x="100" y="700" width="400" height="100" style="stroke:white;stroke-width:1;fill:none;" /></svg>');
+  }
+  .player-marker {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 85px;
+    font-size: 11px;
+    border: 1px solid #333;
+    border-radius: 5px;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    overflow: hidden;
+    text-align: center;
+  }
+  .player-info-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #7d64a0;
+    color: white;
+    padding: 4px 6px;
+    font-weight: bold;
+  }
+  .player-role-mentality, .player-score {
+    font-size: 0.9em;
+  }
+  .player-name {
+    background-color: #f0f0f0;
+    padding: 5px;
+  }
+  .player-name a {
+    font-weight: bold;
+    text-decoration: none;
+    color: black;
+  }
+
+  /* Team list styles */
+  .team-list {
+    flex: 1;
+  }
+</style>
+
 <h1>Squad Analysis Results</h1>
+
+<%# Use @report.snapshot_date to check if data is available %>
+<% if @report.snapshot_date %>
+  <p>Showing data for snapshot taken on: <%= @report.snapshot_date.to_formatted_s(:long) %></p>
+<% end %>
+
+<div>
+  <strong>Tactics:</strong>
+  <% @tactics.each_with_index do |tactic, index| %>
+    <% if tactic == @selected_tactic %>
+      <strong><%= tactic.name %></strong>
+    <% else %>
+      <%= link_to tactic.name, squad_analysis_path(:latest, tactic_id: tactic.id) %>
+    <% end %>
+    <%= " | " unless index == @tactics.size - 1 %>
+  <% end %>
+</div>
 
 <p><%= link_to 'Upload a New Squad File', new_squad_analysis_path %></p>
 
-<%# Only show the results if @first_team has been populated %>
-<% if @first_team.present? %>
+<%# If the report has a snapshot date, we have data to show %>
+<% if @report.snapshot_date %>
   <hr>
-  <div style="display: flex; flex-wrap: wrap; gap: 40px;">
-    <div>
-      <h2>First Team</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Position</th>
-            <th>Name</th>
-            <th>Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @first_team.sort_by { |p| p[:position] }.each do |player_hash| %>
-            <tr>
-              <td><%= player_hash[:position].to_s.sub(/_\d+$/, '') %></td>
-              <td>
-                <% player = @players_by_name[player_hash[:name]] %>
-                <% if player %>
-                  <%= link_to player.name, player_path(player) %>
-                <% else %>
-                  <%= player_hash[:name] %>
-                <% end %>
-              </td>
-              <td><%= player_hash[:score].round(2) %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+  <h2>Using Tactic: <%= @selected_tactic.name %></h2>
 
-    <div>
-      <h2>Second Team</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Position</th>
-            <th>Name</th>
-            <th>Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @second_team.sort_by { |p| p[:position] }.each do |player_hash| %>
-            <tr>
-              <td><%= player_hash[:position].to_s.sub(/_\d+$/, '') %></td>
-              <td>
-                <% player = @players_by_name[player_hash[:name]] %>
-                <% if player %>
-                  <%= link_to player.name, player_path(player) %>
-                <% else %>
-                  <%= player_hash[:name] %>
-                <% end %>
-              </td>
-              <td><%= player_hash[:score].round(2) %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+  <div class="tabs">
+    <div class="tab-link active" data-tab="first-team">First Team</div>
+    <div class="tab-link" data-tab="second-team">Second Team</div>
+    <div class="tab-link" data-tab="third-team">Third Team</div>
+    <div class="tab-link" data-tab="remainder">Remainder</div>
+  </div>
 
-    <div>
-      <h2>Third Team</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Position</th>
-            <th>Name</th>
-            <th>Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @third_team.sort_by { |p| p[:position] }.each do |player_hash| %>
+  <%# First Team %>
+  <div id="first-team" class="tab-content active">
+    <div class="team-layout">
+      <div class="pitch">
+        <% adjusted_team_layout(@report.first_team).each do |player_hash| %>
+          <%# FIXED: Use @report.roles_by_code for the lookup %>
+          <% position_details = @report.roles_by_code[player_hash[:position]] || OpenStruct.new %>
+          <% role = position_details.role || '??' %>
+          <% mentality = position_details.mentality || '??' %>
+          <% mentality_short = mentality.to_s.first(2).capitalize %>
+
+          <div class="player-marker" style="left: <%= player_hash[:coordinates][:x] %>%; top: <%= player_hash[:coordinates][:y] %>%;">
+            <div class="player-info-top">
+              <span class="player-role-mentality"><%= role %> - <%= mentality_short %></span>
+              <span class="player-score"><%= player_hash[:score].round(2) %></span>
+            </div>
+            <div class="player-name">
+              <%= link_to @report.players_by_name[player_hash[:name]].name, player_path(@report.players_by_name[player_hash[:name]]) %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      <div class="team-list">
+        <h3>First Team List</h3>
+        <table>
+          <% sort_by_position(@report.first_team).each do |player_hash| %>
             <tr>
-              <td><%= player_hash[:position].to_s.sub(/_\d+$/, '') %></td>
-              <td>
-                <% player = @players_by_name[player_hash[:name]] %>
-                <% if player %>
-                  <%= link_to player.name, player_path(player) %>
-                <% else %>
-                  <%= player_hash[:name] %>
-                <% end %>
-              </td>
+              <td><%= link_to @report.players_by_name[player_hash[:name]].name, player_path(@report.players_by_name[player_hash[:name]]) %></td>
+              <td>(<%= player_hash[:position].to_s.sub(/_\d+$/, '') %>)</td>
               <td><%= player_hash[:score].round(2) %></td>
             </tr>
           <% end %>
-        </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   </div>
 
-  <hr>
+  <%# Second Team %>
+  <div id="second-team" class="tab-content">
+    <div class="team-layout">
+      <div class="pitch">
+        <% adjusted_team_layout(@report.second_team).each do |player_hash| %>
+          <%# FIXED: Use @report.roles_by_code for the lookup %>
+          <% position_details = @report.roles_by_code[player_hash[:position]] || OpenStruct.new %>
+          <% role = position_details.role || '??' %>
+          <% mentality = position_details.mentality || '??' %>
+          <% mentality_short = mentality.to_s.first(2).capitalize %>
 
-  <h2>Rest of Squad (Best Positions)</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Best Position</th>
-        <th>Score</th>
-      </tr>
-    </thead>
-    <tbody>
-      <%# Sort by score in descending order (highest first) %>
-      <% @remainder.sort_by { |p| -p[:score] }.each do |player_hash| %>
+          <div class="player-marker" style="left: <%= player_hash[:coordinates][:x] %>%; top: <%= player_hash[:coordinates][:y] %>%;">
+            <div class="player-info-top">
+              <span class="player-role-mentality"><%= role %> - <%= mentality_short %></span>
+              <span class="player-score"><%= player_hash[:score].round(2) %></span>
+            </div>
+            <div class="player-name">
+              <%= link_to @report.players_by_name[player_hash[:name]].name, player_path(@report.players_by_name[player_hash[:name]]) %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      <div class="team-list">
+        <h3>Second Team List</h3>
+        <table>
+          <% sort_by_position(@report.second_team).each do |player_hash| %>
+            <tr>
+              <td><%= link_to @report.players_by_name[player_hash[:name]].name, player_path(@report.players_by_name[player_hash[:name]]) %></td>
+              <td>(<%= player_hash[:position].to_s.sub(/_\d+$/, '') %>)</td>
+              <td><%= player_hash[:score].round(2) %></td>
+            </tr>
+          <% end %>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <%# Third Team %>
+  <div id="third-team" class="tab-content">
+    <div class="team-layout">
+      <div class="pitch">
+        <% adjusted_team_layout(@report.third_team).each do |player_hash| %>
+          <%# FIXED: Use @report.roles_by_code for the lookup %>
+          <% position_details = @report.roles_by_code[player_hash[:position]] || OpenStruct.new %>
+          <% role = position_details.role || '??' %>
+          <% mentality = position_details.mentality || '??' %>
+          <% mentality_short = mentality.to_s.first(2).capitalize %>
+
+          <div class="player-marker" style="left: <%= player_hash[:coordinates][:x] %>%; top: <%= player_hash[:coordinates][:y] %>%;">
+            <div class="player-info-top">
+              <span class="player-role-mentality"><%= role %> - <%= mentality_short %></span>
+              <span class="player-score"><%= player_hash[:score].round(2) %></span>
+            </div>
+            <div class="player-name">
+              <%= link_to @report.players_by_name[player_hash[:name]].name, player_path(@report.players_by_name[player_hash[:name]]) %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      <div class="team-list">
+        <h3>Third Team List</h3>
+        <table>
+          <% sort_by_position(@report.third_team).each do |player_hash| %>
+            <tr>
+              <td><%= link_to @report.players_by_name[player_hash[:name]].name, player_path(@report.players_by_name[player_hash[:name]]) %></td>
+              <td>(<%= player_hash[:position].to_s.sub(/_\d+$/, '') %>)</td>
+              <td><%= player_hash[:score].round(2) %></td>
+            </tr>
+          <% end %>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <%# Remainder %>
+  <div id="remainder" class="tab-content">
+    <table>
+      <thead>
         <tr>
-          <td><%= player_hash[:position].to_s.sub(/_\d+$/, '') %></td>
-          <td>
-            <% player = @players_by_name[player_hash[:name]] %>
-            <% if player %>
-              <%= link_to player.name, player_path(player) %>
-            <% else %>
-              <%= player_hash[:name] %>
-            <% end %>
-          </td>
-          <td><%= player_hash[:score].round(2) %></td>
+          <th>Name</th>
+          <th>Best Position</th>
+          <th>Score</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% @report.remainder.sort_by { |p| -p[:score] }.each do |player_hash| %>
+          <tr>
+            <td><%= link_to @report.players_by_name[player_hash[:name]].name, player_path(@report.players_by_name[player_hash[:name]]) %></td>
+            <td><%= player_hash[:position].to_s.sub(/_\d+$/, '') %></td>
+            <td><%= player_hash[:score].round(2) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
 <% else %>
   <hr>
   <p>No squad data has been analyzed yet. Please upload a file to begin.</p>
 <% end %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.tab-link');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = document.getElementById(tab.dataset.tab);
+
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        tabContents.forEach(tc => tc.classList.remove('active'));
+        target.classList.add('active');
+      });
+    });
+  });
+</script>

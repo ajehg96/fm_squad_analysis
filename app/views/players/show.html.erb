@@ -1,26 +1,201 @@
+<%# This CSS block provides the styling for the attribute boxes %>
+<style>
+  .attribute-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 20px;
+  }
+  .attribute-group {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    flex: 1;
+    min-width: 300px;
+  }
+  .attribute-group h3 {
+    margin-top: 0;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #ccc;
+  }
+  .attribute-group table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .attribute-group th, .attribute-group td {
+    padding: 4px;
+    font-size: 12px;
+    text-align: left;
+  }
+  .attr-name { width: 50%; }
+  .attr-val { text-align: center; font-weight: bold; }
+  .attr-change { text-align: center; }
+
+  /* Colors for the boxes */
+  .goalkeeping { background-color: #D9EDF7; } /* Light Blue */
+  .technical { background-color: #E6E8FA; }   /* Light Lavender */
+  .mental { background-color: #DFF0D8; }      /* Light Green */
+  .physical { background-color: #F2DEDE; }     /* Light Pink */
+
+  /* Pitch styles */
+  .pitch {
+    position: relative;
+    width: 600px;
+    height: 800px;
+    background-color: #53a053; /* Green grass */
+    border: 2px solid white;
+    margin: 20px auto;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><line x1="300" y1="0" x2="300" y2="800" style="stroke:white;stroke-width:1;stroke-dasharray:5,5;" /><circle cx="300" cy="400" r="50" style="stroke:white;stroke-width:1;fill:none;" /><rect x="100" y="0" width="400" height="100" style="stroke:white;stroke-width:1;fill:none;" /><rect x="100" y="700" width="400" height="100" style="stroke:white;stroke-width:1;fill:none;" /></svg>');
+  }
+  .role-marker {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    border-radius: 5px;
+    padding: 5px;
+    text-align: center;
+    font-size: 10px;
+    width: 120px;
+    border: 1px solid black;
+  }
+  .role-name {
+    font-weight: bold;
+  }
+  .role-rating {
+    font-size: 1.2em;
+    font-weight: bold;
+  }
+</style>
+
 <h1><%= @progression.player.name %></h1>
 <p><strong>Joined:</strong> <%= @progression.joined_date %></p>
 
-<hr>
+<button id="toggle-change-view">Toggle Change View</button>
 
-<h2>Current Attributes</h2>
-<table>
-  <thead>
-    <tr>
-      <th>Attribute</th>
-      <th>Current</th>
-      <th>Change (Prev)</th>
-      <th>Change (First)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @progression.attribute_changes.each do |attr_name, changes| %>
-      <tr>
-        <td><%= attr_name.to_s.humanize %></td>
-        <td><%= changes[:current_value] %></td>
-        <td><%= changes[:change_since_previous] %></td>
-        <td><%= changes[:change_since_first] %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<div class="attribute-container">
+  <% if @progression.goalkeeper? %>
+    <div class="attribute-group goalkeeping">
+      <h3>Goalkeeping</h3>
+      <table>
+        <thead>
+          <tr>
+            <th class="attr-name">Attribute</th>
+            <th class="attr-val">Current</th>
+            <th class="attr-change change-last">Last</th>
+            <th class="attr-change change-first" style="display: none;">First</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @progression.goalkeeping_attributes.each do |attr_key, data| %>
+            <tr>
+              <td class="attr-name"><%= attr_key.to_s.humanize.sub('Att ', '') %></td>
+              <td class="attr-val"><%= data[:current_value] %></td>
+              <td class="attr-change change-last"><%= display_change(data[:change_since_previous]) %></td>
+              <td class="attr-change change-first" style="display: none;"><%= display_change(data[:change_since_first]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="attribute-group technical">
+      <h3>Technical</h3>
+      <table>
+        <thead>
+          <tr>
+            <th class="attr-name">Attribute</th>
+            <th class="attr-val">Current</th>
+            <th class="attr-change change-last">Last</th>
+            <th class="attr-change change-first" style="display: none;">First</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @progression.technical_attributes.each do |attr_key, data| %>
+            <tr>
+              <td class="attr-name"><%= attr_key.to_s.humanize.sub('Att ', '') %></td>
+              <td class="attr-val"><%= data[:current_value] %></td>
+              <td class="attr-change change-last"><%= display_change(data[:change_since_previous]) %></td>
+              <td class="attr-change change-first" style="display: none;"><%= display_change(data[:change_since_first]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <div class="attribute-group mental">
+    <h3>Mental</h3>
+    <table>
+      <thead>
+        <tr>
+          <th class="attr-name">Attribute</th>
+          <th class="attr-val">Current</th>
+          <th class="attr-change change-last">Last</th>
+          <th class="attr-change change-first" style="display: none;">First</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @progression.mental_attributes.each do |attr_key, data| %>
+          <tr>
+            <td class="attr-name"><%= attr_key.to_s.humanize.sub('Att ', '') %></td>
+            <td class="attr-val"><%= data[:current_value] %></td>
+            <td class="attr-change change-last"><%= display_change(data[:change_since_previous]) %></td>
+            <td class="attr-change change-first" style="display: none;"><%= display_change(data[:change_since_first]) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="attribute-group physical">
+    <h3>Physical</h3>
+    <table>
+      <thead>
+        <tr>
+          <th class="attr-name">Attribute</th>
+          <th class="attr-val">Current</th>
+          <th class="attr-change change-last">Last</th>
+          <th class="attr-change change-first" style="display: none;">First</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @progression.physical_attributes.each do |attr_key, data| %>
+          <tr>
+            <td class="attr-name"><%= attr_key.to_s.humanize.sub('Att ', '') %></td>
+            <td class="attr-val"><%= data[:current_value] %></td>
+            <td class="attr-change change-last"><%= display_change(data[:change_since_previous]) %></td>
+            <td class="attr-change change-first" style="display: none;"><%= display_change(data[:change_since_first]) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<h2>Role Ratings</h2>
+<div class="pitch">
+  <% @progression.role_attributes.each do |role| %>
+    <% coords = position_coordinates(role.role_code) %>
+    <div class="role-marker" style="left: <%= coords[:x] %>%; top: <%= coords[:y] %>%;">
+      <div class="role-name"><%= role.role.titleize %> (<%= role.mentality.first.upcase %>)</div>
+      <div class="role-rating"><%= (@progression.role_ratings[role.role_code] || 0).round(2) %></div>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const toggleButton = document.getElementById('toggle-change-view');
+    const lastChangeElements = document.querySelectorAll('.change-last');
+    const firstChangeElements = document.querySelectorAll('.change-first');
+
+    toggleButton.addEventListener('click', function() {
+      lastChangeElements.forEach(el => {
+        el.style.display = el.style.display === 'none' ? '' : 'none';
+      });
+      firstChangeElements.forEach(el => {
+        el.style.display = el.style.display === 'none' ? '' : 'none';
+      });
+    });
+  });
+</script>

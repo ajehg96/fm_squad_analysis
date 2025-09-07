@@ -1,0 +1,45 @@
+<%= form_with(model: tactic) do |form| %>
+  <% if tactic.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(tactic.errors.count, "error") %> prohibited this tactic from being saved:</h2>
+
+      <ul>
+        <% tactic.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :name, style: "display: block" %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div>
+    <%= form.label :description, style: "display: block" %>
+    <%= form.textarea :description %>
+  </div>
+
+  <h2>Tactic Roles</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Position</th>
+        <th>Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= form.fields_for :tactic_roles do |role_form| %>
+        <tr>
+          <td><%= role_form.hidden_field :position %>Position <%= role_form.object.position %></td>
+          <td><%= role_form.select :role, options_for_select(role_options.map { |r| ["#{r.position.humanize} - #{r.role.humanize} (#{r.mentality.first.upcase})", r.role_code] }, role_form.object.role) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

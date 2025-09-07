@@ -90,22 +90,22 @@ class DataImporter
 
   def import_squad(file_path)
     doc = Nokogiri::HTML(File.open(file_path), nil, "UTF-8")
-    headers = doc.xpath("//th").map(&:text)
-    rows = doc.xpath("//tr").map { |row| row.xpath("./td").map(&:text) }
-    rows.reject!(&:empty?)
-    rows.map { |row| Hash[headers.zip(row)] }
+    table = doc.at_xpath("//table")
+    return [] unless table
+
+    headers = table.xpath(".//tr").first.xpath("./th | ./td").map { |h| h.text.strip }
+
+    data_rows = table.xpath(".//tr")[1..]
+
+    data_rows.map do |row|
+      values = row.xpath("./td").map { |cell| cell.text.strip }
+      Hash[headers.zip(values)]
+    end.reject(&:empty?)
   end
 
   def process_role_attributes(raw_data)
     raw_data.map do |row|
-      position_code = (row["position"] || "").split("_").map { |s| s[0] }.join
-      role_code = (row["role"] || "").split("_").map { |s| s[0] }.join
-      mentality_code = (row["mentality"] || "").split("_").map { |s| s[0] }.join
-      side_code = (row["side"] || "").split("_").map { |s| s[0] }.join
-
-      new_row = row.to_h.except("position", "role", "mentality", "side")
-      new_row["role_code"] = "#{position_code}_#{role_code}_#{mentality_code}_#{side_code}"
-      new_row
+      Role.new(row.to_h)
     end
   end
 
@@ -229,7 +229,8 @@ class DataImporter
     # 1. Apply positional penalty
     apply_pos_penalty = penalize_youth || player["age"] > 21
     if apply_pos_penalty
-      position_prefix = role_code.split("_").first
+      # FIXED: Use [0, 2] to slice the first two characters from the string.
+      position_prefix = role_code.split("_").first[0, 2]
       is_unnatural = case position_prefix
       when "gk" then !player["goal_keeper"]
       when "cd" then !player["central_defender"]
@@ -246,7 +247,7 @@ class DataImporter
       score *= 0.2 if is_unnatural
     end
 
-    # 2. Apply footedness penalty (this was the missing logic)
+    # 2. Apply footedness penalty
     if role_code.end_with?("_r", "_li") && player["foot_right"] <= 4
       return 0
     end

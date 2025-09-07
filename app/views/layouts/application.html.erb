@@ -24,6 +24,13 @@
   </head>
 
   <body>
+    <nav>
+      <%= link_to "Home", root_path %>
+      <%= link_to "Tactics", tactics_path %>
+      <%= link_to "New Tactic", new_tactic_path %>
+      <%= link_to "Squad Analysis", squad_analysis_path(:latest) %>
+      <%= link_to "Scouted Players", scouted_players_path %>
+    </nav>
     <%= yield %>
   </body>
 </html>

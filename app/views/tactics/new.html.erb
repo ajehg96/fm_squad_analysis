@@ -1,0 +1,11 @@
+<% content_for :title, "New tactic" %>
+
+<h1>New tactic</h1>
+
+<%= render "form", tactic: @tactic %>
+
+<br>
+
+<div>
+  <%= link_to "Back to tactics", tactics_path %>
+</div>

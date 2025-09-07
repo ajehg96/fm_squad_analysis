@@ -1,0 +1,50 @@
+<h1>Scouted Players</h1>
+
+<div>
+  <strong>Tactics:</strong>
+  <% @tactics.each_with_index do |tactic, index| %>
+    <% if tactic == @selected_tactic %>
+      <strong><%= tactic.name %></strong>
+    <% else %>
+      <%= link_to tactic.name, scouted_players_path(tactic_id: tactic.id) %>
+    <% end %>
+    <%= " | " unless index == @tactics.size - 1 %>
+  <% end %>
+</div>
+
+<p><%= link_to "Upload New Scouted Players File", new_scouted_player_path %></p>
+
+<% if @scouted_players_data.present? %>
+  <h2>Tactic: <%= @selected_tactic.name %></h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Player</th>
+        <th>Age</th>
+        <% @unique_tactic_roles.each do |tactic_role| %>
+          <th>
+            <%= link_to scouted_players_path(tactic_id: @selected_tactic.id, sort_by: tactic_role.role, sort_direction: params[:sort_by] == tactic_role.role && params[:sort_direction] == 'asc' ? 'desc' : 'asc') do %>
+              <%= @roles_by_code[tactic_role.role].role.titleize %> (<%= @roles_by_code[tactic_role.role].side.first.upcase %>)
+              <% if params[:sort_by] == tactic_role.role %>
+                <%= params[:sort_direction] == 'asc' ? '▲' : '▼' %>
+              <% end %>
+            <% end %>
+          </th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody>
+      <% @scouted_players_data.each do |player_data| %>
+        <tr>
+          <td><%= link_to player_data[:player].name, player_path(player_data[:player]) %></td>
+          <td><%= player_data[:age] %></td>
+          <% @unique_tactic_roles.each do |tactic_role| %>
+            <td><%= (player_data[:ratings][tactic_role.role] || 0).round(2) %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p>No scouted players found.</p>
+<% end %>

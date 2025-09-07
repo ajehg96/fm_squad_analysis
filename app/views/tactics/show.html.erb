@@ -1,0 +1,30 @@
+<p>
+  <strong>Name:</strong>
+  <%= @tactic.name %>
+</p>
+
+<p>
+  <strong>Description:</strong>
+  <%= @tactic.description %>
+</p>
+
+<h2>Tactic Roles</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Position</th>
+      <th>Role</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @tactic.tactic_roles.order(:position).each do |tactic_role| %>
+      <tr>
+        <td>Position <%= tactic_role.position %></td>
+        <td><%= tactic_role.role %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<%= link_to 'Edit', edit_tactic_path(@tactic) %> |
+<%= link_to 'Back', tactics_path %>
